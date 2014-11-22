@@ -17,6 +17,8 @@ EvaluationPU::EvaluationPU()
 {
 	pthread_mutex_init(&mMutex, NULL);
 	pthread_cond_init(&mCond, NULL);
+
+	pthread_cond_init(&mCondTask, NULL);
 	
 	//clear the queue
 	while(!mqEvaluation.empty())
@@ -60,8 +62,16 @@ int EvaluationPU::Execute(int iSize, IEvaluation **ippEvaluation)
 	AddEvaluation(iSize, ippEvaluation);
 
 	//return untill the iSize of evalution is finished
-	//TBD
-	sleep(5);
+	//need add synchronization
+	//sleep(5);
+	
+	//pthread_mutex_lock(&mMutex);
+	
+	//pthread_cond_wait(&mCondTask, &mMutex);
+
+	//pthread_mutex_unlock(&mMutex);
+	
+	//sleep(5);
 	
 	return 0;
 }
@@ -81,6 +91,18 @@ int EvaluationPU::GetEvaluation(IEvaluation **oppEvaluation)
 
 	pthread_mutex_unlock(&mMutex);
 	
+	return 0;
+}
+
+int EvaluationPU::TrySignalCondTask()
+{
+	pthread_mutex_lock(&mMutex);
+
+	if(mqEvaluation.empty())
+		pthread_cond_signal(&mCondTask);
+
+	pthread_mutex_unlock(&mMutex);
+
 	return 0;
 }
 
@@ -120,7 +142,9 @@ int ThreadPool::Execute()
 		
 		mEvaluationPU.GetEvaluation(&lpEvaluation);
 
-		lpEvaluation->Execute();			
+		lpEvaluation->Execute();
+
+		mEvaluationPU.TrySignalCondTask();					
 	}
 	
 	return 0;

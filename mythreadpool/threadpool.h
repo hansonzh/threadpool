@@ -28,14 +28,16 @@ public:
 
 	int Execute(int iSize, IEvaluation **ippEvaluation);
 
+	int TrySignalCondTask();
 private:
 	int hAddEvaluation(IEvaluation *ipEvaluation);
 
 private:
 	queue<IEvaluation*> mqEvaluation;
 	pthread_mutex_t	mMutex;
-	pthread_cond_t	mCond;			
-	
+	pthread_cond_t	mCond;//used for the Evaluation queue
+
+	pthread_cond_t	mCondTask; 
 };
 
 //the threadpool is a typical producter/consumer model, so we 
