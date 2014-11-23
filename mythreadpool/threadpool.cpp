@@ -35,6 +35,8 @@ int EvaluationPU::hAddEvaluation(IEvaluation *ipEvaluation)
 	
 	mqEvaluation.push(ipEvaluation);
 
+	mAddedTask ++;
+	
 	pthread_cond_signal(&mCond);
 
 	pthread_mutex_unlock(&mMutex);	
@@ -56,20 +58,24 @@ int EvaluationPU::AddEvaluation(int iSize, IEvaluation **ippEvaluation)
 	return 0;
 }
 
+//this function should be not parallel called
 int EvaluationPU::Execute(int iSize, IEvaluation **ippEvaluation)
 {
 	//add the evaluation
+	mAddedTask = 0;
+	mFinishedTask = 0;
+	mExpectedTask = iSize;
 	AddEvaluation(iSize, ippEvaluation);
 
 	//return untill the iSize of evalution is finished
 	//need add synchronization
 	//sleep(5);
 	
-	//pthread_mutex_lock(&mMutex);
+	pthread_mutex_lock(&mMutex);
 	
-	//pthread_cond_wait(&mCondTask, &mMutex);
+	pthread_cond_wait(&mCondTask, &mMutex);
 
-	//pthread_mutex_unlock(&mMutex);
+	pthread_mutex_unlock(&mMutex);
 	
 	//sleep(5);
 	
@@ -98,14 +104,18 @@ int EvaluationPU::TrySignalCondTask()
 {
 	pthread_mutex_lock(&mMutex);
 
-	if(mqEvaluation.empty())
+	mFinishedTask ++;
+	
+	if(mAddedTask == mExpectedTask && mFinishedTask == mAddedTask)
 		pthread_cond_signal(&mCondTask);
-
+	
 	pthread_mutex_unlock(&mMutex);
 
 	return 0;
 }
 
+//it is not a good design to expose a private class member
+//TBD, any better solution?
 EvaluationPU* ThreadPool::GetEvaluationPU()
 {
 	return &mEvaluationPU;
@@ -139,12 +149,12 @@ int ThreadPool::Execute()
 	while(true)
 	{
 		IEvaluation *lpEvaluation = NULL;
-		
+			
 		mEvaluationPU.GetEvaluation(&lpEvaluation);
-
+		
 		lpEvaluation->Execute();
 
-		mEvaluationPU.TrySignalCondTask();					
+		mEvaluationPU.TrySignalCondTask();
 	}
 	
 	return 0;

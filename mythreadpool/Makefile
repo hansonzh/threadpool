@@ -1,12 +1,12 @@
 
 server:threadpool.o server.o
-	g++ -g -o server threadpool.o server.o -pthread
+	g++ -g -O0 -o server threadpool.o server.o -pthread
 
 threadpool.o:threadpool.cpp threadpool.h
-	g++ -g -c threadpool.cpp -pthread
+	g++ -g -O0 -c threadpool.cpp -pthread
 
 server.o:server.cpp server.h
-	g++ -g -c server.cpp
+	g++ -g -O0 -c server.cpp
 
 clean:
 	rm server *.o
