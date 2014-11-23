@@ -1,13 +1,13 @@
 
-server:threadpool.o server.o
-	g++ -g -O0 -o server threadpool.o server.o -pthread
+./test/server:threadpool.o ./test/server.o
+	g++ -g -O0 -o ./test/server threadpool.o ./test/server.o -pthread
 
 threadpool.o:threadpool.cpp threadpool.h
 	g++ -g -O0 -c threadpool.cpp -pthread
 
-server.o:server.cpp server.h
-	g++ -g -O0 -c server.cpp
+./test/server.o:./test/server.cpp ./test/server.h
+	g++ -g -O0 -o ./test/server.o -c ./test/server.cpp
 
 clean:
-	rm server *.o
+	rm ./test/server ./test/*.o *.o
 	
